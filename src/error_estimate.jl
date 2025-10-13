@@ -24,7 +24,8 @@ end
 
 function spectrum0(x)
     σ², B, order = fit_auto_regressive(x)
-    return σ² / (1-sum(B))^2
+    #return σ² / (1-sum(B))^2
+    return 1 / (1-sum(B))^2
 end
 
 function fit_auto_regressive(x)
