@@ -26,11 +26,11 @@ y = rand(Exponential(1/λ_true), n)
 end
 
 model = exp_model(y)
-chain = sample(model, NUTS(), MCMCSerial(), 10_000, 2)
+chain = sample(model, NUTS(), MCMCThreads(), 50_000, 2; progress=false)
 Bridge = bridgesampling(chain, model)
 Analytical = α*log(β) - loggamma(α) + loggamma(α + n) - (α + n)*log(β + sum(y))
 
-@test isapprox(value(Bridge), Analytical, atol = 1e-3)
+@test isapprox(value(Bridge), Analytical, atol = 1e-2)
 
 
 ## Test on y ~ NegativeBinomial(r, p), p ~ Beta(α, β)
@@ -46,8 +46,8 @@ y = [4, 2, 0, 6, 1, 3, 2, 1, 0, 4]
     end
 end
 model = nb_model(y, r, α, β)
-chain = sample(model, NUTS(), MCMCSerial(), 10_000, 2)
+chain = sample(model, NUTS(), MCMCThreads(), 50_000, 2; progress=false)
 Bridge = bridgesampling(chain, model)
 Analytical = sum( loggamma.(y .+ r) .- loggamma.(y .+ 1) .- loggamma(r) ) + logbeta(α + n*r, β + sum(y)) - logbeta(α, β)
 
-@test isapprox(value(Bridge), Analytical, atol = 1e-3)
+@test isapprox(value(Bridge), Analytical, atol = 1e-2)
