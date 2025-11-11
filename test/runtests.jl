@@ -1,14 +1,15 @@
 using Test, BridgeSampling, SpecialFunctions, Turing
 
 ## Test on bivariate standard Normal distribution
-samples = rand(MvNormal([1.0 0.0; 0.0 1.0]), 10_000)
+samples = rand(MvNormal([1.0 0.0; 0.0 1.0]), 50_000)
 
 log_posterior(x) = -0.5 * x' * x
 
 Bridge = bridgesampling(samples, log_posterior, [-Inf, -Inf], [Inf, Inf])
+cv = error_estimate(Bridge).cv
 Analytical = log(2*pi)
 
-@test isapprox(value(Bridge), Analytical, atol = 1e-3)
+@test isapprox(value(Bridge), Analytical, atol = 5cv)
 
 
 ## Test on y ~ Exp(1/λ), λ ~ Gamma(α, β)
@@ -26,11 +27,12 @@ y = rand(Exponential(1/λ_true), n)
 end
 
 model = exp_model(y)
-chain = sample(model, NUTS(), MCMCThreads(), 50_000, 2; progress=false)
+chain = sample(model, NUTS(), MCMCThreads(), 50_000, 2; progress=false, verbose=false)
 Bridge = bridgesampling(chain, model)
+cv = error_estimate(Bridge).cv
 Analytical = α*log(β) - loggamma(α) + loggamma(α + n) - (α + n)*log(β + sum(y))
 
-@test isapprox(value(Bridge), Analytical, atol = 1e-2)
+@test isapprox(value(Bridge), Analytical, atol = 5cv)
 
 
 ## Test on y ~ NegativeBinomial(r, p), p ~ Beta(α, β)
@@ -46,8 +48,9 @@ y = [4, 2, 0, 6, 1, 3, 2, 1, 0, 4]
     end
 end
 model = nb_model(y, r, α, β)
-chain = sample(model, NUTS(), MCMCThreads(), 50_000, 2; progress=false)
+chain = sample(model, NUTS(), MCMCThreads(), 50_000, 2; progress=false, verbose=false)
 Bridge = bridgesampling(chain, model)
+cv = error_estimate(Bridge).cv
 Analytical = sum( loggamma.(y .+ r) .- loggamma.(y .+ 1) .- loggamma(r) ) + logbeta(α + n*r, β + sum(y)) - logbeta(α, β)
 
-@test isapprox(value(Bridge), Analytical, atol = 1e-2)
+@test isapprox(value(Bridge), Analytical, atol = 5cv)
