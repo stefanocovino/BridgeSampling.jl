@@ -1,5 +1,5 @@
 module BridgeSampling
-using Turing, StatsBase, Printf, AbstractMCMC, DynamicPPL
+using Turing, StatsBase, Printf, AbstractMCMC, Bijectors, DynamicPPL
 using LinearAlgebra: dot
 import Base: show
 
